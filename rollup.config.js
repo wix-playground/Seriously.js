@@ -1,12 +1,14 @@
 import progress from 'rollup-plugin-progress';
 import filesize from 'rollup-plugin-filesize';
+import uglify from 'rollup-plugin-uglify';
+import { minify } from 'uglify-es';
 
 export default {
-	entry: 'src/seriously.js',
+	entry: 'index.js',
 	targets: [{
 		dest: 'seriously.js',
-		format: 'umd',
-		moduleName: 'Seriously',
+		format: 'amd',
+		name: 'Seriously',
 		amd: {
 			id: 'seriously'
 		}
@@ -15,8 +17,7 @@ export default {
 		progress({
 			clearLine: false
 		}),
+		uglify({}, minify),
 		filesize()
-	],
-	banner: '/*jslint devel: true, bitwise: true, browser: true, white: true, nomen: true, plusplus: true, maxerr: 50, indent: 4, todo: true */\n' +
-	'/*global Float32Array, Uint8Array, Uint16Array, WebGLTexture, HTMLInputElement, HTMLSelectElement, HTMLElement, WebGLFramebuffer, HTMLCanvasElement, WebGLRenderingContext, define, module, exports */'
+	]
 };
