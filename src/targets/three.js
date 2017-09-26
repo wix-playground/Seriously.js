@@ -1,5 +1,6 @@
 import Seriously from '../seriously';
 import { mat4 } from '../utilities/math';
+import { getWebGlContext } from '../utilities/dom';
 
 /*
  * There is currently no way to resize a THREE.WebGLRenderTarget,
@@ -40,17 +41,7 @@ Seriously.target('three', function (target, options) {
 			if (options.gl) {
 				gl = options.gl;
 			} else if (options.canvas && options.canvas.getContext) {
-				try {
-					gl = options.canvas.getContext('webgl');
-				} catch (ignore) {
-				}
-
-				if (!gl) {
-					try {
-						gl = options.canvas.getContext('experimental-webgl');
-					} catch (ignore) {
-					}
-				}
+				gl = getWebGlContext(options.canvas);
 			}
 		}
 
