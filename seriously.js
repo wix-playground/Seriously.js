@@ -1527,8 +1527,8 @@ function SourceNode(seriously, hook, source, options) {
 				this.resize();
 			};
 		} else if (source.tagName === 'IMG') {
-			this.width = source.naturalWidth || 1;
-			this.height = source.naturalHeight || 1;
+			this.width = width || source.naturalWidth || 1;
+			this.height = height || source.naturalHeight || 1;
 
 			if (!source.complete || !source.naturalWidth) {
 				deferTexture = true;
