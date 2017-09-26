@@ -3738,6 +3738,7 @@ function TargetNode(seriously, hook, target, options) {
 		debugContext,
 		frameBuffer,
 		triedWebGl = false,
+		plugin,
 		key;
 
 	function targetPlugin (hook, target, options, force) {
@@ -3752,9 +3753,6 @@ function TargetNode(seriously, hook, target, options) {
 			matchedType = true;
 			that.plugin = plugin;
 			that.compare = plugin.compare;
-			if (plugin.target) {
-				target = plugin.target;
-			}
 			if (plugin.gl && !that.gl) {
 				that.gl = plugin.gl;
 				if (!seriously.gl) {
@@ -3789,7 +3787,10 @@ function TargetNode(seriously, hook, target, options) {
 
 	// forced target type?
 	if (typeof hook === 'string' && seriously.hasTarget(hook)) {
-		seriously.targetPlugin(hook, target, opts, true);
+		plugin = targetPlugin(hook, target, opts, true);
+		if (plugin && plugin.target) {
+			target = plugin.target;
+		}
 	}
 
 	this.renderToTexture = opts.renderToTexture;
@@ -3842,7 +3843,10 @@ function TargetNode(seriously, hook, target, options) {
 			if (!gl) {
 				seriously.attachContext(context);
 			}
-			this.render = this.renderWebGL;
+
+			if (!plugin) {
+				this.render = this.renderWebGL;
+			}
 
 			/*
                 Don't remember what this is for. Maybe we should remove it
