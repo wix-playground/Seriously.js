@@ -5974,6 +5974,7 @@ Seriously$2.target('canvas2d', function (target, options) {
 				}
 			}
 		}
+		canvas = context.canvas;
 	}
 
 	if (context) {
@@ -5987,12 +5988,17 @@ Seriously$2.target('canvas2d', function (target, options) {
 				target = document.createElement('canvas');
 			}
 		}
+
+		target.width = canvas.width;
+		target.height = canvas.height;
+
 		initialize();
 	} else {
 		throw new Error('Failed to create Canvas2D target. Missing Canvas2D context');
 	}
 
 	this.ready = false;
+	this.target = target;
 	this.width = canvas.width;
 	this.height = canvas.height;
 
