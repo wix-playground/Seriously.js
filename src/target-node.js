@@ -240,6 +240,8 @@ function TargetNode(seriously, hook, target, options) {
 				stencil: true,
 				debugContext: debugContext
 			});
+		} else {
+			context = gl;
 		}
 
 		if (!context) {

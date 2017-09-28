@@ -3825,6 +3825,8 @@ function TargetNode(seriously, hook, target, options) {
 				stencil: true,
 				debugContext: debugContext
 			});
+		} else {
+			context = gl;
 		}
 
 		if (!context) {
@@ -4628,6 +4630,10 @@ function Seriously$2(options) {
 		options = {
 			canvas: options
 		};
+	} else if (isInstance(options, 'WebGLRenderingContext')) {
+		options = {
+			context: options
+		};
 	} else {
 		options = options || {};
 	}
@@ -4684,6 +4690,15 @@ function Seriously$2(options) {
 			//todo: initialize frame buffer if not main canvas
 		}
 	};
+
+	if (options.context) {
+		this.attachContext(options.context);
+	} else if (options.canvas) {
+		const ctx = getWebGlContext(options.canvas, options);
+		if (ctx) {
+			this.attachContext(ctx);
+		}
+	}
 
 	this.effect = function (hook, options) {
 		if (!seriousEffects[hook]) {
