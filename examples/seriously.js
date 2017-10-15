@@ -2060,7 +2060,7 @@ function EffectNode (seriously, hook, effect, options) {
 		extend(this.effect, this.effectRef.definition.call(this, options));
 	}
 
-	Seriously.validateInputSpecs(this.effect);
+	seriously.constructor.validateInputSpecs(this.effect);
 
 	this.uniforms.transform = identity;
 	this.inputs = {};
@@ -3258,7 +3258,7 @@ function TransformNode (seriously, hook, transform, options) {
 		}
 	}
 
-	Seriously.validateInputSpecs(this.plugin);
+	seriously.constructor.validateInputSpecs(this.plugin);
 
 	// set default value for all inputs (no defaults for methods)
 	defaults = seriously.defaults(hook);
@@ -3825,6 +3825,8 @@ function TargetNode(seriously, hook, target, options) {
 				stencil: true,
 				debugContext: debugContext
 			});
+		} else {
+			context = gl;
 		}
 
 		if (!context) {
@@ -4246,7 +4248,7 @@ function validateInputSpecs(plugin) {
 			input.shaderDirty = !!input.shaderDirty;
 
 			if (typeof input.validate !== 'function') {
-				input.validate = Seriously$2.inputValidators[input.type] || passThrough;
+				input.validate = Seriously$1.inputValidators[input.type] || passThrough;
 			}
 
 			if (!plugin.defaultImageInput && input.type === 'image') {
@@ -4256,11 +4258,11 @@ function validateInputSpecs(plugin) {
 	}
 }
 
-function Seriously$2(options) {
+function Seriously$1(options) {
 
 	//if called without 'new', make a new object and return that
-	if (window === this || !(this instanceof Seriously$2) || this.id !== undefined) {
-		return new Seriously$2(options);
+	if (window === this || !(this instanceof Seriously$1) || this.id !== undefined) {
+		return new Seriously$1(options);
 	}
 
 	//initialize object, private properties
@@ -4628,6 +4630,10 @@ function Seriously$2(options) {
 		options = {
 			canvas: options
 		};
+	} else if (isInstance(options, 'WebGLRenderingContext')) {
+		options = {
+			context: options
+		};
 	} else {
 		options = options || {};
 	}
@@ -4684,6 +4690,15 @@ function Seriously$2(options) {
 			//todo: initialize frame buffer if not main canvas
 		}
 	};
+
+	if (options.context) {
+		this.attachContext(options.context);
+	} else if (options.canvas) {
+		const ctx = getWebGlContext(options.canvas, options);
+		if (ctx) {
+			this.attachContext(ctx);
+		}
+	}
 
 	this.effect = function (hook, options) {
 		if (!seriousEffects[hook]) {
@@ -4930,7 +4945,7 @@ function Seriously$2(options) {
 		if (allTargets) {
 			targetList = allTargets.get(target);
 			if (targetList) {
-				Seriously$2.logger.warn(
+				Seriously$1.logger.warn(
 					'Target already in use by another instance',
 					target,
 					Object.keys(targetList).map(function (key) {
@@ -5095,7 +5110,7 @@ function Seriously$2(options) {
 	this.incompatible = function (hook) {
 		var key,
 			plugin,
-			failure = Seriously$2.incompatible(hook);
+			failure = Seriously$1.incompatible(hook);
 
 		if (failure) {
 			return failure;
@@ -5173,7 +5188,7 @@ function Seriously$2(options) {
 }
 
 //trace back all sources to make sure we're not making a cyclical connection
-Seriously$2.traceSources = function traceSources (node, original) {
+Seriously$1.traceSources = function traceSources (node, original) {
 	let i,
 		source,
 		nodeSources;
@@ -5201,7 +5216,7 @@ Seriously$2.traceSources = function traceSources (node, original) {
 	return false;
 };
 
-Seriously$2.incompatible = function (hook) {
+Seriously$1.incompatible = function (hook) {
 	let canvas, gl, plugin;
 
 	if (incompatibility === undefined) {
@@ -5241,11 +5256,11 @@ Seriously$2.incompatible = function (hook) {
 	return false;
 };
 
-Seriously$2.plugin = function (hook, definition, meta) {
+Seriously$1.plugin = function (hook, definition, meta) {
 	let effect;
 
 	if (seriousEffects[hook]) {
-		Seriously$2.logger.warn('Effect [' + hook + '] already loaded');
+		Seriously$1.logger.warn('Effect [' + hook + '] already loaded');
 		return;
 	}
 
@@ -5285,7 +5300,7 @@ Seriously$2.plugin = function (hook, definition, meta) {
 	return effect;
 };
 
-Seriously$2.removePlugin = function (hook) {
+Seriously$1.removePlugin = function (hook) {
 	let all, effect, plugin;
 
 	if (!hook) {
@@ -5312,11 +5327,11 @@ Seriously$2.removePlugin = function (hook) {
 	return this;
 };
 
-Seriously$2.source = function (hook, definition, meta) {
+Seriously$1.source = function (hook, definition, meta) {
 	let source;
 
 	if (seriousSources[hook]) {
-		Seriously$2.logger.warn('Source [' + hook + '] already loaded');
+		Seriously$1.logger.warn('Source [' + hook + '] already loaded');
 		return;
 	}
 
@@ -5345,7 +5360,7 @@ Seriously$2.source = function (hook, definition, meta) {
 	return source;
 };
 
-Seriously$2.removeSource = function (hook) {
+Seriously$1.removeSource = function (hook) {
 	let all, source, plugin;
 
 	if (!hook) {
@@ -5372,11 +5387,11 @@ Seriously$2.removeSource = function (hook) {
 	return this;
 };
 
-Seriously$2.transform = function (hook, definition, meta) {
+Seriously$1.transform = function (hook, definition, meta) {
 	let transform;
 
 	if (seriousTransforms[hook]) {
-		Seriously$2.logger.warn('Transform [' + hook + '] already loaded');
+		Seriously$1.logger.warn('Transform [' + hook + '] already loaded');
 		return;
 	}
 
@@ -5411,7 +5426,7 @@ Seriously$2.transform = function (hook, definition, meta) {
 	return transform;
 };
 
-Seriously$2.removeTransform = function (hook) {
+Seriously$1.removeTransform = function (hook) {
 	let all, transform, plugin;
 
 	if (!hook) {
@@ -5438,11 +5453,11 @@ Seriously$2.removeTransform = function (hook) {
 	return this;
 };
 
-Seriously$2.target = function (hook, definition, meta) {
+Seriously$1.target = function (hook, definition, meta) {
 	let target;
 
 	if (seriousTargets[hook]) {
-		Seriously$2.logger.warn('Target [' + hook + '] already loaded');
+		Seriously$1.logger.warn('Target [' + hook + '] already loaded');
 		return;
 	}
 
@@ -5471,7 +5486,7 @@ Seriously$2.target = function (hook, definition, meta) {
 	return target;
 };
 
-Seriously$2.removeTarget = function (hook) {
+Seriously$1.removeTarget = function (hook) {
 	let all, target, plugin;
 
 	if (!hook) {
@@ -5498,7 +5513,7 @@ Seriously$2.removeTarget = function (hook) {
 	return this;
 };
 
-Seriously$2.sourcePlugin = function (node, hook, source, options, force) {
+Seriously$1.sourcePlugin = function (node, hook, source, options, force) {
 	let p = seriousSources[hook];
 	if (p && p.definition) {
 		p = p.definition.call(node, source, options, force);
@@ -5511,11 +5526,11 @@ Seriously$2.sourcePlugin = function (node, hook, source, options, force) {
 	return p;
 };
 
-Seriously$2.getTarget = function (hook) {
+Seriously$1.getTarget = function (hook) {
 	return seriousTargets[hook];
 };
 
-Seriously$2.forEachSource = function (fn) {
+Seriously$1.forEachSource = function (fn) {
 	for (let key in seriousSources) {
 		if (seriousSources.hasOwnProperty(key) && seriousSources[key]) {
 			if (fn(key, seriousSources[key]) === false) {
@@ -5525,7 +5540,7 @@ Seriously$2.forEachSource = function (fn) {
 	}
 };
 
-Seriously$2.forEachTarget = function (fn) {
+Seriously$1.forEachTarget = function (fn) {
 	for (let key in seriousTargets) {
 		if (seriousTargets.hasOwnProperty(key) && seriousTargets[key]) {
 			if (fn(key, seriousSources[key]) === false) {
@@ -5536,7 +5551,7 @@ Seriously$2.forEachTarget = function (fn) {
 };
 
 //todo: validators should not allocate new objects/arrays if input is valid
-Seriously$2.inputValidators = {
+Seriously$1.inputValidators = {
 	color: function (value, input, defaultValue, oldValue) {
 		var s,
 			a,
@@ -5611,7 +5626,7 @@ Seriously$2.inputValidators = {
 			colorCtx.fillStyle = value;
 			s = colorCtx.fillStyle;
 			if (s && s !== '#000000') {
-				return Seriously$2.inputValidators.color(s, input, defaultValue, oldValue);
+				return Seriously$1.inputValidators.color(s, input, defaultValue, oldValue);
 			}
 
 			a[0] = a[1] = a[2] = a[3] = 0;
@@ -5757,9 +5772,9 @@ Seriously$2.inputValidators = {
 	//todo: date/time
 };
 
-Seriously$2.validateInputSpecs = validateInputSpecs;
+Seriously$1.validateInputSpecs = validateInputSpecs;
 
-Seriously$2.prototype.effects = Seriously$2.effects = function () {
+Seriously$1.prototype.effects = Seriously$1.effects = function () {
 	let name,
 		effect,
 		manifest,
@@ -5803,11 +5818,11 @@ Seriously$2.prototype.effects = Seriously$2.effects = function () {
 	return effects;
 };
 
-Seriously$2.prototype.getTarget = function (hook) {
+Seriously$1.prototype.getTarget = function (hook) {
 	return seriousTargets[hook];
 };
 
-Seriously$2.prototype.hasTarget = function (hook) {
+Seriously$1.prototype.hasTarget = function (hook) {
 	return !!seriousTargets[hook];
 };
 
@@ -5821,16 +5836,16 @@ if (window.Seriously) {
 					i !== 'plugin' &&
 					typeof window.Seriously[i] === 'object') {
 
-					Seriously$2.plugin(i, window.Seriously[i]);
+					Seriously$1.plugin(i, window.Seriously[i]);
 				}
 			}
 		}());
 	}
 }
 
-Seriously$2.logger = logger;
+Seriously$1.logger = logger;
 
-Seriously$2.util = {
+Seriously$1.util = {
 	mat4: mat4,
 	checkSource: function (source) {
 		return checkSource(source, incompatibility);
@@ -5847,7 +5862,7 @@ const document$4 = window.document;
 
 let noVideoTextureSupport;
 
-Seriously$2.source('video', function (video, options, force) {
+Seriously$1.source('video', function (video, options, force) {
 	const me = this;
 
 	let canvas,
@@ -5947,9 +5962,9 @@ Seriously$2.source('video', function (video, options, force) {
 				} catch (securityError) {
 					if (securityError.code === window.DOMException.SECURITY_ERR) {
 						me.allowRefresh = false;
-						Seriously$2.logger.error('Unable to access cross-domain image');
+						Seriously$1.logger.error('Unable to access cross-domain image');
 					} else {
-						Seriously$2.logger.error('Error rendering video source', securityError);
+						Seriously$1.logger.error('Error rendering video source', securityError);
 					}
 				}
 				return false;
@@ -5975,7 +5990,7 @@ Seriously$2.source('video', function (video, options, force) {
 let getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 let URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
 
-Seriously$2.source('camera', function (source, options, force) {
+Seriously$1.source('camera', function (source, options, force) {
 	let me = this,
 		video,
 		key,
@@ -6075,7 +6090,7 @@ Seriously$2.source('camera', function (source, options, force) {
 					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 					return true;
 				} catch (error) {
-					Seriously$2.logger.error('Error rendering camera video source', error);
+					Seriously$1.logger.error('Error rendering camera video source', error);
 				}
 
 				return false;
@@ -6096,7 +6111,7 @@ Seriously$2.source('camera', function (source, options, force) {
 	title: 'Camera'
 });
 
-Seriously$2.source('three', function (source, options, force) {
+Seriously$1.source('three', function (source, options, force) {
 	let width,
 		height,
 		typedArray,
@@ -6184,7 +6199,7 @@ function memcpy(dst, dstOffset, src, srcOffset, length) {
 
 let depthRegex = /GDepth:Data="([\S]*)"/;
 
-Seriously$2.source('depth', function (source, options, force) {
+Seriously$1.source('depth', function (source, options, force) {
 	let that = this,
 		element,
 		url,
@@ -6245,7 +6260,7 @@ Seriously$2.source('depth', function (source, options, force) {
 
 			match = depthRegex.exec(str);
 			if (match === null) {
-				Seriously$2.logger.error('JPEG file does not include depth image.');
+				Seriously$1.logger.error('JPEG file does not include depth image.');
 				return false;
 			}
 
@@ -6258,13 +6273,13 @@ Seriously$2.source('depth', function (source, options, force) {
 			if (!depthImage.complete || !depthImage.naturalWidth) {
 				depthImage.addEventListener('load', initialize, true);
 				depthImage.addEventListener('error', function (evt) {
-					Seriously$2.logger.error('Error loading depth image.', evt);
+					Seriously$1.logger.error('Error loading depth image.', evt);
 				}, true);
 			} else {
 				initialize();
 			}
 		} else {
-			Seriously$2.logger.error('Unable to load depth image. File is not a JPEG.');
+			Seriously$1.logger.error('Unable to load depth image. File is not a JPEG.');
 			return false;
 		}
 	}
@@ -6331,7 +6346,7 @@ const identity$1 = new Float32Array([
 	0, 0, 0, 1
 ]);
 
-Seriously$2.target('three', function (target, options) {
+Seriously$1.target('three', function (target, options) {
 	let me = this,
 		gl,
 		frameBuffer;
@@ -6455,9 +6470,9 @@ Seriously$2.target('three', function (target, options) {
 	title: 'THREE.js WebGLRenderTarget Target'
 });
 
-let mat4$1 = Seriously$2.util.mat4;
+let mat4$1 = Seriously$1.util.mat4;
 
-Seriously$2.transform('flip', function () {
+Seriously$1.transform('flip', function () {
 	let me = this,
 		horizontal = true;
 
@@ -6510,7 +6525,7 @@ Seriously$2.transform('flip', function () {
 	description: 'Flip Horizontal/Vertical'
 });
 
-const mat4$2 = Seriously$2.util.mat4;
+const mat4$2 = Seriously$1.util.mat4;
 const PI = Math.PI;
 const f2 = 0.5 * (Math.sqrt(3.0) - 1.0);
 const g2 = (3.0 - Math.sqrt(3.0)) / 6.0;
@@ -6635,7 +6650,7 @@ function noise2D(xin, yin) {
 	return 70.0 * (n0 + n1 + n2);
 }
 
-Seriously$2.transform('camerashake', function () {
+Seriously$1.transform('camerashake', function () {
 	let me = this,
 		octaves = 1,
 		time = 0,
@@ -6956,9 +6971,9 @@ Seriously$2.transform('camerashake', function () {
 	title: 'Camera Shake'
 });
 
-const mat4$3 = Seriously$2.util.mat4;
+const mat4$3 = Seriously$1.util.mat4;
 
-Seriously$2.transform('reformat', function () {
+Seriously$1.transform('reformat', function () {
 	let me = this,
 		forceWidth,
 		forceHeight,
@@ -7132,7 +7147,7 @@ Seriously$2.transform('reformat', function () {
 	description: 'Change output dimensions'
 });
 
-const mat4$4 = Seriously$2.util.mat4;
+const mat4$4 = Seriously$1.util.mat4;
 
 /*
  *	Default transform - 2D
@@ -7142,7 +7157,7 @@ const mat4$4 = Seriously$2.util.mat4;
  *	- scale
  *	- skew
  */
-Seriously$2.transform('2d', function (options) {
+Seriously$1.transform('2d', function (options) {
 	let me = this,
 		degrees = !(options && options.radians),
 
@@ -7535,7 +7550,7 @@ Seriously$2.transform('2d', function (options) {
 	description: 'Translate, Rotate, Scale, Skew'
 });
 
-const mat4$5 = Seriously$2.util.mat4;
+const mat4$5 = Seriously$1.util.mat4;
 
 /*
  * 3D transform
@@ -7543,7 +7558,7 @@ const mat4$5 = Seriously$2.util.mat4;
  * - rotate (degrees)
  * - scale
  */
-Seriously$2.transform('3d', function (options) {
+Seriously$1.transform('3d', function (options) {
 	let me = this,
 		degrees = !(options && options.radians),
 		centerX = 0,
@@ -8163,7 +8178,7 @@ const mixAlpha = {
 		normal: true
 	};
 
-Seriously$2.plugin('accumulator', function () {
+Seriously$1.plugin('accumulator', function () {
 	let drawOpts = {
 			clear: false
 		},
@@ -8196,7 +8211,7 @@ Seriously$2.plugin('accumulator', function () {
 			initialize();
 			frameBuffers = [
 				this.frameBuffer,
-				new Seriously$2.util.FrameBuffer(gl, this.width, this.height)
+				new Seriously$1.util.FrameBuffer(gl, this.width, this.height)
 			];
 			clear();
 		},
@@ -8508,7 +8523,7 @@ Seriously$2.plugin('accumulator', function () {
 	}
 });
 
-Seriously$2.plugin('vignette', {
+Seriously$1.plugin('vignette', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -8549,7 +8564,7 @@ Seriously$2.plugin('vignette', {
  * inspired by Evan Wallace (https://github.com/evanw/glfx.js)
  */
 
-Seriously$2.plugin('hue-saturation', {
+Seriously$1.plugin('hue-saturation', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.vertex = [
@@ -8647,7 +8662,7 @@ Seriously$2.plugin('hue-saturation', {
 	description: 'Rotate hue and multiply saturation.'
 });
 
-Seriously$2.plugin('split', function () {
+Seriously$1.plugin('split', function () {
 	let baseShader,
 		resolutionA = [1, 1],
 		resolutionB = [1, 1];
@@ -8985,7 +9000,7 @@ const identity$2 = new Float32Array([
 		0, 0, 0, 1
 	]);
 
-Seriously$2.plugin('blend', function () {
+Seriously$1.plugin('blend', function () {
 	let topUniforms,
 		bottomUniforms,
 		topOpts = {
@@ -9544,7 +9559,7 @@ let identity$3 = new Float32Array([
 		0, 0, 0, 1
 	]);
 
-Seriously$2.plugin('blur', function (options) {
+Seriously$1.plugin('blur', function (options) {
 	let fbHorizontal,
 		fbVertical,
 		baseShader,
@@ -9776,7 +9791,7 @@ const identity$4 = new Float32Array([
 		0, 0, 0, 1
 	]);
 
-Seriously$2.plugin('directionblur', function (options) {
+Seriously$1.plugin('directionblur', function (options) {
 	let fbs,
 		baseShader,
 		loopUniforms = {
@@ -10036,7 +10051,7 @@ sobelMatrixConstants = new Float32Array([
 	1.0, 0.0, -1.0, 2.0, 0.0, -2.0, 1.0, 0.0, -1.0
 ]);
 
-Seriously$2.plugin('edge', {
+Seriously$1.plugin('edge', {
 	initialize: function (initialize) {
 		initialize();
 
@@ -10162,7 +10177,7 @@ const channelLookup = {
 		w: 3
 	};
 
-Seriously$2.plugin('channels', function () {
+Seriously$1.plugin('channels', function () {
 	const sources = [],
 		shaders = [],
 		matrices = [],
@@ -10405,7 +10420,7 @@ Seriously$2.plugin('channels', function () {
 				'}'
 			].join('\n');
 
-			shader = new Seriously$2.util.ShaderProgram(this.gl,
+			shader = new Seriously$1.util.ShaderProgram(this.gl,
 				vert,
 				frag);
 
@@ -10507,7 +10522,7 @@ Seriously$2.plugin('channels', function () {
 	title: 'Channel Mapping'
 });
 
-Seriously$2.plugin('color', function () {
+Seriously$1.plugin('color', function () {
 	const me = this,
 		drawOpts = {
 			width: 1,
@@ -10634,7 +10649,7 @@ Seriously$2.plugin('color', function () {
 	categories: ['generator']
 });
 
-Seriously$2.plugin('linear-transfer', {
+Seriously$1.plugin('linear-transfer', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -10678,7 +10693,7 @@ Seriously$2.plugin('linear-transfer', {
 	description: 'For each color channel: [slope] * [value] + [intercept]'
 });
 
-Seriously$2.plugin('lut', {
+Seriously$1.plugin('lut', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		/*!
@@ -10899,7 +10914,7 @@ const makeNoise = 'float makeNoise(float u, float v, float timer) {\n' +
 		'	return clamp(0.1 + dx * 100.0, 0.0, 1.0);\n' +
 		'}\n';
 
-Seriously$2.plugin('simplex', function () {
+Seriously$1.plugin('simplex', function () {
 	const me = this;
 
 	function resize() {
@@ -11025,7 +11040,7 @@ Seriously$2.plugin('simplex', function () {
 	description: 'Generate Simplex Noise'
 });
 
-Seriously$2.plugin('falsecolor', {
+Seriously$1.plugin('falsecolor', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -11070,7 +11085,7 @@ Seriously$2.plugin('falsecolor', {
 	title: 'False Color'
 });
 
-Seriously$2.plugin('panorama', function () {
+Seriously$1.plugin('panorama', function () {
 	const me = this;
 
 	function resize() {
@@ -11244,7 +11259,7 @@ Seriously$2.plugin('panorama', function () {
  * License: https://github.com/evanw/glfx.js/blob/master/LICENSE
  */
 
-Seriously$2.plugin('vibrance', {
+Seriously$1.plugin('vibrance', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -11297,7 +11312,7 @@ Seriously$2.plugin('vibrance', {
 
 const intRegex = /\d+/;
 
-Seriously$2.plugin('select', function (options) {
+Seriously$1.plugin('select', function (options) {
 	let count,
 		me = this,
 		i,
@@ -11462,7 +11477,7 @@ const identity$5 = new Float32Array([
 	]);
 const intRegex$1 = /\d+/;
 
-Seriously$2.plugin('layers', function (options) {
+Seriously$1.plugin('layers', function (options) {
 	let count,
 		me = this,
 		topOpts = {
@@ -11707,7 +11722,7 @@ const identity$6 = new Float32Array([
 
 letters.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAvAAAAAICAYAAACf+MsnAAAFY0lEQVR4Xu2Z644bOwyDN+//0NsOigEMQdRHyU6CFDnA+bHVWNaFojiTx8/Pz+/f/4/89/v7z9Xj8Tjib3XyTN9usFcMz8gt3h9zXf/O6nD/W1V7Vb9uXad+nHucZ9xenX7OqTHdSfmRXfmPsSn8xPMrllcfCkdVfHSe7Ned0/yp7jv2GPfqK+MCByc0zzvxKi5RPq8cuvE4+JrwpFM7N78K2yu+qb9kd3qV+ZjUx5n/+xnXP81ctW/UHQ5P3Gd360vxKf+n8dGpxXTeKu6h2ansFT6pvo5G2/FP99NsUf9d/xleInfetcj629m9cf9WOV5K+78R8ERGRLYO8VQiecd/1vwKEJV46JBJRzhRfXftVL/MTgM48UmL0l2OSmzs9kctAJfE4/1KkNFzbj8cjFHsJ/u460vhnPDfqddujJ27poLCWWBuHt0YKr/ki+yOKJnk5Z7pPLfLf4TZif+qvi7XuDWg+HbtNEe79ds9H7m1m2/3+YzLK5Hc9e/gYxdfNP+ZfdV9lT3usWn+9310/qiAdxa1O5gTEqVhoLudxVwVNPrvCqDp/ZX4d0Uk1Y7sbgyU4zooCk8nB3i9Y61V5wWpIjDlP+ZJsxPvmLxEOD2sntk5Pz1LBOb0L+sPfQGs6ksYpt7QAiHuUwtkgl+F3Qyf2YxTX53+Vdjfjc8VYIq7KT+abzof7ervZ8fX8d/Jyc3PmTcnRrrPEbyVTnD8T+Y38pH624mfNIr6muzO95S/sh1Gvog/XmW/a6N+scww43zgqLjcOX9cwFeESQK3Gpx32QggTlwk8Ei8OXfE4VMLeCLQiLBjfJM7VA069XefnZBGJz7Vr24dK3GwEoqLD7p/1+4IMWdRdxaMK9CmP4E62F7nm8S7s4B3BMCkBzQPVQ0IM06+2WLvzlDlI+NfF4d0ljiHuF/Zb/4m/4ojTgnA6f0qfiWA135P5l/NoFv/7txm+5ZyyOw0e1R/skd8ZKKwwnjXf9xLrkBV+2x3Pib9Vz3JOMaNL/KZ+oCkXhDUTLxEwLsC41OfI5DEYe9+mXfr0l2mJH5ISHTOUw2U8IjD5LyVUtxEmrvi4V5ejvijWNWicBbOyfsrYejkMMXmdIFEAZH19ASWnNyrPlBdKH+yU3y0gGjGKf4Mv51ft9zzKk83vul5qr9r7+CT9gHx2zvs0/yofpGX1AuC4svqhYJeJJydNZk/urcSxet91dfiUy94HX6oBHCHi5+F38svCeg1h+zZ6nyF5VUzVC8Q0X9LwE/IkMjmpJ3i27XvxuqQ0c4dp/JTfnb9T847AoNIW/nokIYrYKvnJvln/siPwtD0XAeTU+x0luEugWdLNeY4ecl260vxK8Efl3OnZi4uaZZIMBFeJ/hw6xrFvppvV1Q559d8MwwR50cskIBQ2KhE3y7/ZeddAUjxOr3diZ/8U3+I953z7uzR7Lj4rvjl9HxXvaHaOflSfSkf93y24xx94PpX89I5H2t9+fwK+KVzNOwdIeM+e905+ZqqRIj7pYHiU3FNFnBnkO+41EKige3cpX7GunwoARfjIwKrxNhEJFLfMrsbI+G/smfkojAa60vxPcNeCZCqhjSra6ydBaAWSFzaqnb01c4VEdVCWWPM7svstKDWuKrZpwUb7dVsOzPcxUeGdYdfdgV8Vr+Mv1R8Tn/iHcSNWR8jjjv9URzama9qbp0XlBP4y2Jw6u/E577AZTVz/BM/OfySzSjl79o73FRxaFdfuPG5/XE58PbXEvAT8UBn1HKuSIB8ThYwiZfJnd8z768Aib/3R/iN4J0VeMXcVwvynbl/735OBV6BKTfyT+e/T4/f7dP3uW8F3Aqs/PIHbWXeeeKjnSsAAAAASUVORK5CYII=';
 
-Seriously$2.plugin('ascii', function () {
+Seriously$1.plugin('ascii', function () {
 	let baseShader,
 		scaledBuffer,
 		lettersTexture,
@@ -11774,7 +11789,7 @@ Seriously$2.plugin('ascii', function () {
 
 			resize();
 
-			scaledBuffer = new Seriously$2.util.FrameBuffer(gl, scaledWidth, scaledHeight);
+			scaledBuffer = new Seriously$1.util.FrameBuffer(gl, scaledWidth, scaledHeight);
 
 			//so it stays blocky
 			gl.bindTexture(gl.TEXTURE_2D, scaledBuffer.texture);
@@ -11867,7 +11882,7 @@ Seriously$2.plugin('ascii', function () {
  * Modified to keep alpha channel constant
  */
 
-Seriously$2.plugin('bleach-bypass', {
+Seriously$1.plugin('bleach-bypass', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -11963,7 +11978,7 @@ Seriously$2.plugin('bleach-bypass', {
 
 //todo: add Simulate mode http://mudcu.be/labs/Color/Vision/Javascript/Color.Vision.Simulate.js
 
-Seriously$2.plugin('daltonize', {
+Seriously$1.plugin('daltonize', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		//Vertex shader
@@ -12080,7 +12095,7 @@ Seriously$2.plugin('daltonize', {
 	description: 'Add contrast to colours to assist CVD (colour-blind) users.'
 });
 
-Seriously$2.plugin('kaleidoscope', {
+Seriously$1.plugin('kaleidoscope', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -12143,7 +12158,7 @@ Seriously$2.plugin('kaleidoscope', {
  * http://horde3d.org/wiki/index.php5?title=Shading_Technique_-_FXAA
  */
 
-Seriously$2.plugin('fxaa', {
+Seriously$1.plugin('fxaa', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.vertex = [
@@ -12259,7 +12274,7 @@ Seriously$2.plugin('fxaa', {
 	description: 'Fast approximate anti-aliasing'
 });
 
-Seriously$2.plugin('checkerboard', function () {
+Seriously$1.plugin('checkerboard', function () {
 	const me = this;
 
 	function resize() {
@@ -12383,7 +12398,7 @@ Seriously$2.plugin('checkerboard', function () {
  * Modified to preserve alpha
  */
 
-Seriously$2.plugin('filmgrain', {
+Seriously$1.plugin('filmgrain', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -12526,7 +12541,7 @@ const channelVectors = {
 		lightness: [1 / 3, 1 / 3, 1 / 3, 0]
 	};
 
-Seriously$2.plugin('displacement', function () {
+Seriously$1.plugin('displacement', function () {
 	this.uniforms.resMap = [1, 1];
 	this.uniforms.resSource = [1, 1];
 	this.uniforms.xVector = channelVectors.red;
@@ -12691,7 +12706,7 @@ Seriously$2.plugin('displacement', function () {
  */
 //todo: make noise better?
 
-Seriously$2.plugin('nightvision', {
+Seriously$1.plugin('nightvision', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -12763,7 +12778,7 @@ const minSize = 0.02;
 const maxSize = 0.3;
 const particleCount = 20;
 
-Seriously$2.plugin('tvglitch', function () {
+Seriously$1.plugin('tvglitch', function () {
 	let lastHeight,
 		lastTime,
 		particleBuffer,
@@ -13047,7 +13062,7 @@ Seriously$2.plugin('tvglitch', function () {
 	title: 'TV Glitch'
 });
 
-Seriously$2.plugin('mirror', {
+Seriously$1.plugin('mirror', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -13075,7 +13090,7 @@ Seriously$2.plugin('mirror', {
 	description: 'Shader Mirror Effect'
 });
 
-Seriously$2.plugin('colorcomplements', {
+Seriously$1.plugin('colorcomplements', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -13187,7 +13202,7 @@ Seriously$2.plugin('colorcomplements', {
 	description: 'http://theabyssgazes.blogspot.com/2010/03/teal-and-orange-hollywood-please-stop.html'
 });
 
-Seriously$2.plugin('crop', function () {
+Seriously$1.plugin('crop', function () {
 	const me = this;
 
 	// custom resize method
@@ -13326,7 +13341,7 @@ Seriously$2.plugin('crop', function () {
 	title: 'Crop'
 });
 
-Seriously$2.plugin('gradientwipe', function () {
+Seriously$1.plugin('gradientwipe', function () {
 	this.uniforms.resGradient = [1, 1];
 	this.uniforms.resSource = [1, 1];
 
@@ -13500,7 +13515,7 @@ Seriously$2.plugin('gradientwipe', function () {
  * http://v002.info/licenses/
  */
 
-Seriously$2.plugin('opticalflow', function () {
+Seriously$1.plugin('opticalflow', function () {
 	let previousFrameBuffer,
 		baseShader;
 
@@ -13617,7 +13632,7 @@ Seriously$2.plugin('opticalflow', function () {
 	title: 'Optical Flow'
 });
 
-Seriously$2.plugin('brightness-contrast', {
+Seriously$1.plugin('brightness-contrast', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -13676,7 +13691,7 @@ Seriously$2.plugin('brightness-contrast', {
  *	todo: add different modes?
  */
 
-Seriously$2.plugin('chroma', {
+Seriously$1.plugin('chroma', {
 	shader: function (inputs, shaderSource) {
 		shaderSource.vertex = [
 			'precision mediump float;',
@@ -13829,7 +13844,7 @@ Seriously$2.plugin('chroma', {
 	description: ''
 });
 
-Seriously$2.plugin('color-select', {
+Seriously$1.plugin('color-select', {
 	shader: function (inputs, shaderSource) {
 		shaderSource.vertex = [
 			'precision mediump float;',
@@ -14078,7 +14093,7 @@ Seriously$2.plugin('color-select', {
  * algorithm from http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
  */
 
-Seriously$2.plugin('temperature', {
+Seriously$1.plugin('temperature', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.vertex = [
@@ -14164,7 +14179,7 @@ Seriously$2.plugin('temperature', {
  * http://devlog-martinsh.blogspot.com.es/2011/03/glsl-dithering.html
  */
 
-Seriously$2.plugin('dither', {
+Seriously$1.plugin('dither', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14237,7 +14252,7 @@ Seriously$2.plugin('dither', {
 	title: 'Dither'
 });
 
-Seriously$2.plugin('emboss', {
+Seriously$1.plugin('emboss', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.vertex = [
@@ -14309,7 +14324,7 @@ Seriously$2.plugin('emboss', {
 	description: 'Emboss'
 });
 
-Seriously$2.plugin('exposure', {
+Seriously$1.plugin('exposure', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14348,7 +14363,7 @@ Seriously$2.plugin('exposure', {
 	description: 'Exposure control'
 });
 
-Seriously$2.plugin('freeze', {
+Seriously$1.plugin('freeze', {
 	draw: function (shader, model, uniforms, frameBuffer, draw) {
 		if (!this.inputs.frozen) {
 			draw(shader, model, uniforms, frameBuffer);
@@ -14373,7 +14388,7 @@ Seriously$2.plugin('freeze', {
 	description: 'Freeze Frame'
 });
 
-Seriously$2.plugin('highlights-shadows', {
+Seriously$1.plugin('highlights-shadows', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14425,7 +14440,7 @@ Seriously$2.plugin('highlights-shadows', {
 	description: 'Darken highlights, lighten shadows'
 });
 
-Seriously$2.plugin('lumakey', {
+Seriously$1.plugin('lumakey', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14484,7 +14499,7 @@ Seriously$2.plugin('lumakey', {
 	description: ''
 });
 
-Seriously$2.plugin('fader', {
+Seriously$1.plugin('fader', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14534,7 +14549,7 @@ Seriously$2.plugin('fader', {
  * License: https://github.com/evanw/glfx.js/blob/master/LICENSE
  */
 
-Seriously$2.plugin('hex', {
+Seriously$1.plugin('hex', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14614,7 +14629,7 @@ Seriously$2.plugin('hex', {
 	description: 'Hexagonal Pixelate'
 });
 
-Seriously$2.plugin('invert', {
+Seriously$1.plugin('invert', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14643,7 +14658,7 @@ Seriously$2.plugin('invert', {
 	description: 'Invert image color'
 });
 
-Seriously$2.plugin('noise', {
+Seriously$1.plugin('noise', {
 	shader: function (inputs, shaderSource, utilities) {
 		const frag = [
 			'precision mediump float;',
@@ -14710,7 +14725,7 @@ Seriously$2.plugin('noise', {
 	description: 'Add noise'
 });
 
-Seriously$2.plugin('pixelate', {
+Seriously$1.plugin('pixelate', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14747,7 +14762,7 @@ Seriously$2.plugin('pixelate', {
 	title: 'Pixelate'
 });
 
-Seriously$2.plugin('polar', {
+Seriously$1.plugin('polar', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14790,7 +14805,7 @@ Seriously$2.plugin('polar', {
  * http://msdn.microsoft.com/en-us/library/bb313868(v=xnagamestudio.10).aspx
  */
 
-Seriously$2.plugin('ripple', {
+Seriously$1.plugin('ripple', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14842,7 +14857,7 @@ Seriously$2.plugin('ripple', {
 	description: ''
 });
 
-Seriously$2.plugin('scanlines', {
+Seriously$1.plugin('scanlines', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14902,7 +14917,7 @@ Seriously$2.plugin('scanlines', {
  * http://www.techrepublic.com/blog/howdoi/how-do-i-convert-images-to-grayscale-and-sepia-tone-using-c/120
  */
 
-Seriously$2.plugin('sepia', {
+Seriously$1.plugin('sepia', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -14945,7 +14960,7 @@ Seriously$2.plugin('sepia', {
  * inspired by http://lab.adjazent.com/2009/01/09/more-pixel-bender/
  */
 
-Seriously$2.plugin('sketch', {
+Seriously$1.plugin('sketch', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -15011,7 +15026,7 @@ Seriously$2.plugin('sketch', {
 	description: 'Pencil/charcoal sketch'
 });
 
-Seriously$2.plugin('throttle', function () {
+Seriously$1.plugin('throttle', function () {
 	let lastDrawTime = 0;
 	return {
 		draw: function (shader, model, uniforms, frameBuffer, draw) {
@@ -15047,7 +15062,7 @@ Seriously$2.plugin('throttle', function () {
 	}
 });
 
-Seriously$2.plugin('tone', {
+Seriously$1.plugin('tone', {
 	commonShader: true,
 	shader: function (inputs, shaderSource) {
 		shaderSource.fragment = [
@@ -15109,6 +15124,6 @@ Seriously$2.plugin('tone', {
 	description: ''
 });
 
-return Seriously$2;
+return Seriously$1;
 
 })));
