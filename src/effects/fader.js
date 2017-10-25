@@ -11,10 +11,15 @@ Seriously.plugin('fader', {
 			'uniform sampler2D source;',
 			'uniform vec4 color;',
 			'uniform float amount;',
+			'uniform bool colored;',
 
 			'void main(void) {',
 			'	gl_FragColor = texture2D(source, vTexCoord);',
-			'	gl_FragColor = mix(gl_FragColor, color, amount);',
+			'	if (colored) {',
+			'		gl_FragColor = mix(gl_FragColor, color, amount);',
+			'	} else {',
+			'		gl_FragColor.a *= amount;',
+			'	}',
 			'}'
 		].join('\n');
 		return shaderSource;
@@ -39,6 +44,11 @@ Seriously.plugin('fader', {
 			defaultValue: 0.5,
 			min: 0,
 			max: 1
+		},
+		colored: {
+			type: 'boolean',
+			uniform: 'colored',
+			defaultValue: true
 		}
 	},
 	title: 'Fader',
