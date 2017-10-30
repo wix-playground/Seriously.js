@@ -240,11 +240,15 @@ function TargetNode(seriously, hook, target, options) {
 				stencil: true,
 				debugContext: debugContext
 			});
-		} else {
+		} else if (gl && opts.usePrimaryContext) {
 			context = gl;
 		}
 
 		if (!context) {
+			if (opts.usePrimaryContext) {
+				throw new Error('Using primary context as target but none was supplied.');
+			}
+
 			if (!opts.allowSecondaryWebGL && gl && gl.canvas !== target) {
 				throw new Error('Only one WebGL target canvas allowed. Set allowSecondaryWebGL option to create secondary context.');
 			}
