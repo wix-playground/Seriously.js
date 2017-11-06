@@ -4945,10 +4945,6 @@ function Seriously$1(options) {
 
 		sources.push(node);
 		allSourcesByHook[node.hook].push(node);
-
-		if (sources.length && !rafId) {
-			renderDaemon();
-		}
 	};
 
 	this.removeSourceNode = function (node) {
