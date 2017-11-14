@@ -6016,6 +6016,7 @@ Seriously$1.target('canvas2d', function (target, options) {
 		throw new Error('Failed to create Canvas2D target. Missing Canvas2D context');
 	}
 
+	this.readBlob = options ? !!options.readBlob : false;
 	this.ready = false;
 	this.target = target;
 	this.width = canvas.width;
@@ -6033,7 +6034,9 @@ Seriously$1.target('canvas2d', function (target, options) {
 		context: context,
 		render: function render() {
 			var canvas = this.seriously.gl.canvas,
-			    img = void 0;
+			    img = void 0,
+			    async = this.readBlob,
+			    url = void 0;
 			if (canvas && context && this.dirty && this.ready && this.source) {
 				this.renderWebGL();
 				this.dirty = true;
@@ -6048,15 +6051,39 @@ Seriously$1.target('canvas2d', function (target, options) {
 						Seriously$1.logger.error(e);
 					});
 				} else {
-					// using canvas.toDataURL() and Image()
-					img = new Image();
+					if (async) {
+						// Using canvas.toBlob() and Image().
+						img = new Image();
+					} else {
+						// Using simple copy of WebGL canvas to the 2d canvas
+						img = canvas;
+					}
+
 					img.width = this.width;
 					img.height = this.height;
-					img.onload = function () {
+
+					var handler = function handler() {
 						context.drawImage(img, 0, 0, this.width, this.height);
+
+						if (async) {
+							URL.revokeObjectURL(url);
+						}
+						// leave no trace
+						img = null;
+
 						this.dirty = false;
-					}.bind(this);
-					img.src = canvas.toDataURL('image/png');
+					};
+
+					if (async) {
+						img.onload = handler;
+
+						canvas.toBlob(function (blob) {
+							url = URL.createObjectURL(blob, 'image/png');
+							img.src = url;
+						});
+					} else {
+						handler();
+					}
 				}
 			}
 		},
